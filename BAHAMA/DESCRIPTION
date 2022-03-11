@@ -1,0 +1,15 @@
+Package: BAHAMA
+Type: Package
+Title: BaHaMa: A Bayesian hierarchical model for the detection of MedDRA coded adverse events in RCTs
+Version: 0.1.0
+Author: A. Revers
+Maintainer: A. Revers <a.revers@amsterdamumc.nl>
+Description: A Bayesian hierarchical model for the detection of MedDRA coded adverse events in RCTs
+License: 
+Encoding: UTF-8
+LazyData: true
+Imports: Rcpp (>= 1.0.6), rstan, broom.mixed
+LinkingTo: Rcpp
+RoxygenNote: 7.1.1
+Depends: 
+    R (>= 2.10)
