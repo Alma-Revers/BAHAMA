@@ -8,7 +8,7 @@ Description: A Bayesian hierarchical model for the detection of MedDRA coded adv
 License: 
 Encoding: UTF-8
 LazyData: true
-Imports: Rcpp (>= 1.0.6), rstan, broom.mixed
+Imports: Rcpp (>= 1.0.6), rstan, broom.mixed, shiny, pkgload, ggplot2, plotly, htmlwidgets
 LinkingTo: Rcpp
 RoxygenNote: 7.1.1
 Depends: 
