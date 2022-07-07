@@ -5,3 +5,21 @@ This repository contains a R-package, tutorial and the Bayesian model as present
 - The BAHAMA R package and tutorial
 - Simulation study as presented in the paper
 - Stan code data file of the BAHAMA model
+
+## How to install the BAHAMA package
+Install devtools (if needed)
+'''
+install.packages("devtools")
+'''
+
+Load the devtool package
+'''
+library(devtools)
+'''
+
+Now you can install the BAHAMA package by using:
+'''
+install_github("Alma-Revers/BAHAMA/BAHAMA")
+'''
+
+
