@@ -29,13 +29,13 @@ library(BAHAMA)
 ```
 The BAHAMA method needs 3 dataset, (1)the adverse event counts, (2)the medDRA tree, and (3)data from the patient/cases.
 Example data: 
-1) AE_data, a vector with AEs
+1) AE_vector, a vector with AEs
 2) tree, a tree with the medDRA structure of the example AE data
 3) sampleData, a vector with a treatment group of the cases
 
 1) Adverse event data needs to be a cases by AE matrix. If counts are ordered in a long format, use the function:
 ```
-counts <- aeCountsFromVector(AE_data)
+counts <- aeCountsFromVector(AE_vector)
 ```
 2) A matrix of MedDRA IDs. The rows correspond to the MedDRA structure (SOC, HLGT, HLT, PT), each row correspond to a single AE. If multiaxiallity is present, a single AE is represented in multiple rows.
 ```
