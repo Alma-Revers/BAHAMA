@@ -27,14 +27,14 @@ medDRADataFromMatrix <- function(medDRAMatrix){
     stop("The rows of the 'medDRAMatrix' have to correspond with the MedDRA levels (SOC, HLGT, HLT, PT), place them in the correct order")
   }
 
-  pt_hlt <- matrix(NA, nrow = length(unique(medDRAMatrix[4,])), ncol = 4)
+  pt_hlt <- matrix(NA, nrow = length(unique(medDRAMatrix[4,])), ncol = 10)
   pt_hlt[,1] <- unique(medDRAMatrix[4,])
   for( i in 1:length(pt_hlt[,1]) ){
     for( j in 1:length(unique(medDRAMatrix[3, medDRAMatrix[4,] == pt_hlt[i,1] ])) )
       pt_hlt[i,j+1] <-  unique(medDRAMatrix[3,medDRAMatrix[4,] == pt_hlt[i,1]])[j]
   }
 
-  hlt_hlgt <- matrix(NA, nrow = length(unique(medDRAMatrix[3,])), ncol = 4)
+  hlt_hlgt <- matrix(NA, nrow = length(unique(medDRAMatrix[3,])), ncol = 10)
   hlt_hlgt[,1] <- unique(medDRAMatrix[3,])
   for( i in 1:length(hlt_hlgt[,1]) ){
     for( j in 1:length(unique(medDRAMatrix[2, medDRAMatrix[3,] == hlt_hlgt[i,1] ])) ){

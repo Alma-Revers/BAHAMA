@@ -46,7 +46,7 @@ BAHAMADataSet <- setClass(Class = "BAHAMADataSet",
                             w_hlt_hlgt = "matrix",
                             w_pt_hlt = "matrix",
                             N_PT_perHLT = "numeric",
-                            N_PT_perHLGT = "matrix"
+                            N_PT_perHLGT = "numeric"
                           )
 )
 
@@ -73,7 +73,9 @@ BAHAMADataSet <- function(aeCounts, medDRAData, sampleData, thresholdIncidence =
   y_pt_trt <- apply(aeCounts * sampleData[,1], 2, sum)
   y_pt_cont <- apply(aeCounts * (1- sampleData[,1]), 2, sum)
 
-  pts_to_include <- aggregating(y_pt_trt, y_pt_cont, thresholdIncidence, thresholdStructure, medDRAData@pt_hlt)
+  pts_to_include <- aggregating(y_trt = y_pt_trt, y_cont = y_pt_cont,
+                                thresholdIncidence = thresholdIncidence, thresholdStructure = thresholdStructure,
+                                medDRAData = medDRAData@pt_hlt)
 
   y_hlt_trt <- c()
   y_hlt_cont <- c()
@@ -87,11 +89,11 @@ BAHAMADataSet <- function(aeCounts, medDRAData, sampleData, thresholdIncidence =
   hlt_hlgt <- medDRAData@hlt_hlgt[medDRAData@hlt_hlgt[,1] %in% names(y_hlt_trt),]
   hlt_hlgt <- hlt_hlgt[order(match(hlt_hlgt[,1],names(y_hlt_trt))),]
 
-  hlts_to_include <- aggregating(y_hlt_trt,
-                                 y_hlt_cont,
-                                 thresholdIncidence,
-                                 thresholdStructure,
-                                 hlt_hlgt)
+  hlts_to_include <- aggregating(y_trt = y_hlt_trt,
+                                 y_cont = y_hlt_cont,
+                                 thresholdIncidence = thresholdIncidence,
+                                 thresholdStructure = thresholdStructure,
+                                 medDRAData = hlt_hlgt)
 
   y_hlgt_trt <- c()
   y_hlgt_cont <- c()
@@ -137,10 +139,12 @@ BAHAMADataSet <- function(aeCounts, medDRAData, sampleData, thresholdIncidence =
   if(length(y_hlgt_trt) != 0){
     N_PT_perHLGT_def <- rep(0, length(hlts_to_include$ae_higher_level))
     for(i in 1:length(hlts_to_include$ae_higher_level)){
-      N_PT_perHLGT_def[i] <- sum(subset(N_PT_perHLGT, N_PT_perHLGT[,2] == hlts_to_include$ae_higher_level[i])[,5])
+      N_PT_perHLGT_def[i] <- sum(as.numeric(N_PT_perHLGT[N_PT_perHLGT[,2] == hlts_to_include$ae_higher_level[i],5]))
     }
-    N_PT_perHLGT_def <- cbind(hlts_to_include$ae_higher_level, N_PT_perHLGT_def)
-    N_PT_perHLGT_def <- N_PT_perHLGT_def[,N_PT_perHLGT_def[,2] != 0]
+    names(N_PT_perHLGT_def) <-hlts_to_include$ae_higher_level
+    N_PT_perHLGT_def <- N_PT_perHLGT_def[N_PT_perHLGT_def != 0]
+    #N_PT_perHLGT_def <- cbind(as.numeric(hlts_to_include$ae_higher_level), N_PT_perHLGT_def)
+
   }
   else{N_PT_perHLGT_def <- matrix(c(0,0), ncol=2)}
 

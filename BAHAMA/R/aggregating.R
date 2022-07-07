@@ -17,8 +17,15 @@ aggregating <- function(y_trt, y_cont, thresholdIncidence, thresholdStructure, m
 
   ae_higher_level <- medDRAData[(medDRAData[,2] %in% ae_under_threshold_structure),]
   ae_excluded <- medDRAData[!ae_threshold_incidence,]
-  ae_excluded<- ae_excluded[!ae_excluded[,2] %in% medDRAData[ae_threshold_incidence,2],]
-  ae_higher_level <- unique(c(ae_higher_level[,2] , ae_excluded[,2]))
+  if(is.null(dim(ae_excluded))){
+    ae_excluded<- ae_excluded[!ae_excluded[2] %in% medDRAData[ae_threshold_incidence,2]]
+  }
+  else {ae_excluded<- ae_excluded[!ae_excluded[,2] %in% medDRAData[ae_threshold_incidence,2],]}
+  if(is.null(dim(ae_excluded))){
+    ae_higher_level <- unique(c(ae_higher_level[,2] , ae_excluded[2]))
+  }
+  else {ae_higher_level <- unique(c(ae_higher_level[,2] , ae_excluded[,2]))}
+
 
   return(list(ae_to_include = ae_to_include,
               ae_higher_level = ae_higher_level))

@@ -147,7 +147,7 @@ model {
                  w_hlt_hlgt = BAHAMADataSet@w_hlt_hlgt,
                  w_hlgt_soc = BAHAMADataSet@w_hlgt_soc,
                  N_PT_perHLT = BAHAMADataSet@N_PT_perHLT,
-                 N_PT_perHLGT = BAHAMADataSet@N_PT_perHLGT[,2]
+                 N_PT_perHLGT = BAHAMADataSet@N_PT_perHLGT
     )
   }
 else{
@@ -281,17 +281,17 @@ data_list = list(N_subj_trt = BAHAMADataSet@N_trt,
 }
 
 options(mc.cores = parallel::detectCores())
-model_obj <- stan_model(model_code = model_code)
-stan_fit <- sampling(model_obj, data=data_list, chains=4)
+model_obj <- rstan::stan_model(model_code = model_code)
+stan_fit <- rstan::sampling(model_obj, data=data_list, chains=4)
 
-tidy_rr_pt <- tidy(stan_fit, pars="lambda_pt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95,
+tidy_rr_pt <- broom.mixed::tidy(stan_fit, pars="theta_pt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95,
                    rhat=TRUE,
                    ess = TRUE)
-tidy_rr_hlt <- tidy(stan_fit, pars="mu_t_hlt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
+tidy_rr_hlt <- broom.mixed::tidy(stan_fit, pars="mu_t_hlt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
                     ess = TRUE)
-tidy_rr_hlgt <- tidy(stan_fit, pars="mu_t_hlgt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
+tidy_rr_hlgt <- broom.mixed::tidy(stan_fit, pars="mu_t_hlgt", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
                      ess = TRUE)
-tidy_rr_soc <- tidy(stan_fit, pars="mu_t_soc", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
+tidy_rr_soc <- broom.mixed::tidy(stan_fit, pars="mu_t_soc", estimate.method = "mean", conf.int=TRUE, conf.level = 0.95, rhat=TRUE,
                     ess = TRUE)
 
 tidy_rr_pt$label <- names(BAHAMADataSet@y_pt_trt)
@@ -300,25 +300,105 @@ tidy_rr_hlgt$label <- rownames(BAHAMADataSet@w_hlgt_soc)
 tidy_rr_soc$label <- colnames(BAHAMADataSet@w_hlgt_soc)
 
 PT_abs_diff <- abs(BAHAMADataSet@y_pt_trt - BAHAMADataSet@y_pt_cont)
+y_pt_c <- BAHAMADataSet@y_pt_cont
+y_pt_t <- BAHAMADataSet@y_pt_trt
+
 HLT_abs_diff <- c()
+y_hlt_c <- c()
+y_hlt_t <- c()
 for(i in 1:BAHAMADataSet@N_hlt_PT){
+  y_hlt_c <- c(y_hlt_c, sum(y_pt_c[BAHAMADataSet@w_pt_hlt[,i]>0]))
+  y_hlt_t <- c(y_hlt_t, sum(y_pt_t[BAHAMADataSet@w_pt_hlt[,i]>0]))
   HLT_abs_diff <- c(HLT_abs_diff, sum(PT_abs_diff[BAHAMADataSet@w_pt_hlt[,i]>0]))
 }
 HLT_abs_diff <- c(HLT_abs_diff, abs(BAHAMADataSet@y_hlt_trt - BAHAMADataSet@y_hlt_cont) )
+y_hlt_c <- c(y_hlt_c, BAHAMADataSet@y_hlt_cont)
+y_hlt_t <- c(y_hlt_t, BAHAMADataSet@y_hlt_trt)
+
 HLGT_abs_diff <- c()
+y_hlgt_c <- c()
+y_hlgt_t <- c()
 for(i in 1:BAHAMADataSet@N_hlgt_hlt){
+  y_hlgt_c <- c(y_hlgt_c, sum(y_hlt_c[BAHAMADataSet@w_hlt_hlgt[,i]>0]))
+  y_hlgt_t <- c(y_hlgt_t, sum(y_hlt_t[BAHAMADataSet@w_hlt_hlgt[,i]>0]))
   HLGT_abs_diff <- c(HLGT_abs_diff, sum(HLT_abs_diff[BAHAMADataSet@w_hlt_hlgt[,i]>0]) )
 }
 HLGT_abs_diff <- c(HLGT_abs_diff, abs(BAHAMADataSet@y_hlgt_trt - BAHAMADataSet@y_hlgt_cont) )
+y_hlgt_c <- c(y_hlgt_c, BAHAMADataSet@y_hlgt_cont)
+y_hlgt_t <- c(y_hlgt_t, BAHAMADataSet@y_hlgt_trt)
 
-
+SOC_abs_diff <- c()
+y_soc_c <- c()
+y_soc_t <- c()
+for(i in 1:BAHAMADataSet@N_soc){
+  y_soc_c <- c( y_soc_c, sum(y_hlgt_c[BAHAMADataSet@w_hlgt_soc[,i]>0]) )
+  y_soc_t <- c( y_soc_t, sum(y_hlgt_t[BAHAMADataSet@w_hlgt_soc[,i]>0]) )
+  SOC_abs_diff <- c( SOC_abs_diff, sum(HLGT_abs_diff[BAHAMADataSet@w_hlgt_soc[,i]>0]) )
+}
 
 tidy_rr_pt$abs_diff <- PT_abs_diff
 tidy_rr_hlt$abs_diff <- HLT_abs_diff
+tidy_rr_hlgt$abs_diff <- HLGT_abs_diff
+tidy_rr_soc$abs_diff <- SOC_abs_diff
 
-object <- list(RR_PT = tidy_rr_pt,
-               RR_HLT = tidy_rr_hlt,
-               RR_HLGT = tidy_rr_hlgt,
-               RR_SOC = tidy_rr_soc)
+tidy_rr_pt$y_pt_c <- y_pt_c
+tidy_rr_hlt$y_hlt_c <- y_hlt_c
+tidy_rr_hlgt$y_hlgt_c <- y_hlgt_c
+tidy_rr_soc$y_soc_c <- y_soc_c
+tidy_rr_pt$y_pt_t <- y_pt_t
+tidy_rr_hlt$y_hlt_t <- y_hlt_t
+tidy_rr_hlgt$y_hlgt_t <- y_hlgt_t
+tidy_rr_soc$y_soc_t <- y_soc_t
+
+soc_hlgt_labels <- c()
+for(i in 1:BAHAMADataSet@N_hlgt){
+  if(sum(BAHAMADataSet@w_hlgt_soc[i,]>0) == 1){
+    soc_hlgt_labels <- c(soc_hlgt_labels, colnames(BAHAMADataSet@w_hlgt_soc)[BAHAMADataSet@w_hlgt_soc[i,]>0])
+  }
+  else{
+    soc_hlgt_labels <- c(soc_hlgt_labels, colnames(BAHAMADataSet@w_hlgt_soc)[which.max(BAHAMADataSet@w_hlgt_soc[i,])[1] ])
+  }
+}
+
+soc_hlt_labels <- c()
+hlgt_hlt_labels <- c()
+for(i in 1:BAHAMADataSet@N_hlt){
+  if(sum(BAHAMADataSet@w_hlt_hlgt[i,]>0) == 1){
+    soc_hlt_labels <- c(soc_hlt_labels, soc_hlgt_labels[BAHAMADataSet@w_hlt_hlgt[i,] == 1])
+    hlgt_hlt_labels <- c(hlgt_hlt_labels, colnames(BAHAMADataSet@w_hlt_hlgt)[BAHAMADataSet@w_hlt_hlgt[i,] == 1])
+  }
+  else{
+    soc_hlt_labels <- c(soc_hlt_labels, soc_hlgt_labels[which.max(BAHAMADataSet@w_hlt_hlgt[i,])[1] ])
+    hlgt_hlt_labels <- c(hlgt_hlt_labels, colnames(BAHAMADataSet@w_hlt_hlgt)[ which.max(BAHAMADataSet@w_hlt_hlgt[i,])[1] ])
+  }
+}
+
+soc_pt_labels <- c()
+hlgt_pt_labels <- c()
+hlt_pt_labels <- c()
+for(i in 1:BAHAMADataSet@N_pt){
+  if(sum(BAHAMADataSet@w_pt_hlt[i,]>0) == 1){
+    soc_pt_labels <- c(soc_pt_labels, soc_hlt_labels[BAHAMADataSet@w_pt_hlt[i,] == 1][1])
+    hlgt_pt_labels <- c(hlgt_pt_labels, hlgt_hlt_labels[BAHAMADataSet@w_pt_hlt[i,] == 1][1])
+    hlt_pt_labels <- c(hlt_pt_labels, colnames(BAHAMADataSet@w_pt_hlt)[BAHAMADataSet@w_pt_hlt[i,] == 1][1])
+  }
+  else{
+    soc_pt_labels <- c(soc_pt_labels, soc_hlt_labels[which.max(BAHAMADataSet@w_pt_hlt[i,])[1] ])
+    hlgt_pt_labels <- c(hlgt_pt_labels, hlgt_hlt_labels[ which.max(BAHAMADataSet@w_pt_hlt[i,])[1] ])
+    hlt_pt_labels <- c(hlt_pt_labels, colnames(BAHAMADataSet@w_pt_hlt)[ which.max(BAHAMADataSet@w_pt_hlt[i,])[1] ])
+  }
+}
+tidy_rr_soc$label <- as.factor(tidy_rr_soc$label)
+tidy_rr_hlgt$soc <- factor(soc_hlgt_labels, levels= levels(tidy_rr_soc$label))
+tidy_rr_hlt$soc <- factor(soc_hlt_labels, levels= levels(tidy_rr_soc$label))
+tidy_rr_pt$soc <- factor(soc_pt_labels, levels= levels(tidy_rr_soc$label))
+tidy_rr_hlt$hlgt <- hlgt_hlt_labels
+tidy_rr_pt$hlt <- hlt_pt_labels
+tidy_rr_pt$hlgt <- hlgt_pt_labels
+
+object <- list(tidy_rr_pt = tidy_rr_pt,
+               tidy_rr_hlt = tidy_rr_hlt,
+               tidy_rr_hlgt = tidy_rr_hlgt,
+               tidy_rr_soc = tidy_rr_soc)
 return(object)
 }
